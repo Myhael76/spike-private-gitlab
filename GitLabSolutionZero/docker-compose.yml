@@ -28,7 +28,6 @@ services:
       - web-config:/etc/gitlab/
       - web-logs:/var/log/gitlab
       - web-data:/var/opt/gitlab
-      - ./backup/runner/:/opt/gitlab/backup/
     networks:
       - gitlab
   gitlab-runner:
@@ -43,7 +42,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - runner-config:/etc/gitlab-runner/
       - runner-home:/home/gitlab-runner/
-      - ./backup/runner/:/opt/gitlab/backup/
     networks:
       - gitlab
 
