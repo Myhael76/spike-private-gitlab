@@ -1,0 +1,52 @@
+version: '3.9'
+
+# Initial version from https://www.atlantic.net/dedicated-server-hosting/how-to-install-gitlab-with-docker-and-docker-compose-on-arch-linux/
+
+volumes:
+  web-logs: {}
+  web-data: {}
+  web-config: {}
+  runner-config: {}
+  runner-home: {}
+
+services:
+  web:
+    image: my-gitlab-ee-web
+    build: ./build/web
+    restart: always
+    hostname: '${HOSTNAME}'
+    container_name: gitlab-ee
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://${HOSTNAME}:${EXTERNAL_PORT_HTTP}'
+        gitlab_rails['gitlab_shell_ssh_port'] = ${EXTERNAL_PORT_SSH}
+    ports:
+      - '${EXTERNAL_PORT_HTTP}:${EXTERNAL_PORT_HTTP}'
+      #- '${EXTERNAL_PORT_HTTPS}:443'
+      - '${EXTERNAL_PORT_SSH}:22'
+    volumes:
+      - web-config:/etc/gitlab/
+      - web-logs:/var/log/gitlab
+      - web-data:/var/opt/gitlab
+      - ./backup/runner/:/opt/gitlab/backup/
+    networks:
+      - gitlab
+  gitlab-runner:
+    image: my-gitlab-runner
+    build: ./build/runner
+    container_name: gitlab-runner
+    restart: always
+    depends_on:
+      web:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - runner-config:/etc/gitlab-runner/
+      - runner-home:/home/gitlab-runner/
+      - ./backup/runner/:/opt/gitlab/backup/
+    networks:
+      - gitlab
+
+networks:
+  gitlab:
+    name: gitlab-network

@@ -1,0 +1,27 @@
+version: '3.9'
+
+# Initial version from https://www.atlantic.net/dedicated-server-hosting/how-to-install-gitlab-with-docker-and-docker-compose-on-arch-linux/
+
+volumes:
+  web-logs: {}
+  web-data: {}
+  web-config: {}
+  runner-config: {}
+  runner-home: {}
+
+services:
+  res-web:
+    image: alpine
+    volumes:
+      - web-config:/etc/gitlab/
+      - web-logs:/var/log/gitlab
+      - web-data:/var/opt/gitlab
+      - ./backup/web/:/opt/my-backup/
+    entrypoint: /opt/my-backup/restore-backup.sh
+  res-runner:
+    image: alpine
+    volumes:
+      - runner-config:/etc/gitlab-runner/
+      - runner-home:/home/gitlab-runner/
+      - ./backup/runner/:/opt/my-backup/
+    entrypoint: /opt/my-backup/restore-backup.sh
